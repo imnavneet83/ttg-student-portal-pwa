@@ -62,11 +62,13 @@ async function login() {
 
     if (data.success) {
 
-      showDashboard(data);
+  localStorage.setItem("ttgStudentData", JSON.stringify(data));
 
-      console.log(data);
+  showDashboard(data);
 
-    } else {
+  console.log(data);
+
+} else {
 
       message.style.color = "red";
       message.innerHTML =
@@ -211,7 +213,7 @@ function showDashboard(data) {
         <p id="passwordMessage"></p>
       </div>
 
-      <button onclick="location.reload()">Logout</button>
+      <button id="logoutBtn">Logout</button>
 
       <div class="footer">
         The Toppers Gurukul<br>
@@ -226,4 +228,15 @@ function showDashboard(data) {
   document
     .getElementById("changePasswordBtn")
     .addEventListener("click", () => changeMyPassword(s.id));
+    document
+  .getElementById("logoutBtn")
+  .addEventListener("click", () => {
+    localStorage.removeItem("ttgStudentData");
+    location.reload();
+  });
+}
+const savedStudentData = localStorage.getItem("ttgStudentData");
+
+if (savedStudentData) {
+  showDashboard(JSON.parse(savedStudentData));
 }
