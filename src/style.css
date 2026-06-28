@@ -193,3 +193,164 @@ th{
     text-align:center;
   }
 }
+.attendance-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.attendance-popup {
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 18px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.attendance-popup h2 {
+  color: #006b8f;
+  margin-top: 0;
+}
+
+.month-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.month-btn {
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  background: #007c91;
+  color: white;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.month-btn:hover {
+  background: #005f70;
+  transform: translateY(-2px);
+}
+
+.month-btn:active {
+  transform: scale(0.98);
+}
+
+.close-popup-btn {
+  border: none;
+  background: #dc3545;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-weight: bold;
+  color: #006b8f;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.attendance-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: 10px 0 14px;
+}
+
+.calendar-cell {
+  min-height: 52px;
+  border-radius: 10px;
+  padding: 6px 2px;
+  text-align: center;
+  background: #f1f5f7;
+  border: 1px solid #e0e0e0;
+}
+
+.calendar-cell.empty {
+  background: transparent;
+  border: none;
+}
+
+.day-number {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.status-text {
+  font-size: 13px;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.calendar-cell.present {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.calendar-cell.absent {
+  background: #ffebee;
+  color: #b71c1c;
+}
+
+.calendar-cell.leave {
+  background: #fff8e1;
+  color: #e65100;
+}
+
+.calendar-cell.holiday {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.calendar-cell.blank {
+  background: #f5f5f5;
+  color: #777;
+}
+
+.attendance-legend {
+  font-size: 12px;
+  margin-bottom: 14px;
+  line-height: 1.8;
+}
+
+.legend {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.present-dot {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.absent-dot {
+  background: #ffebee;
+  color: #b71c1c;
+}
+
+.leave-dot {
+  background: #fff8e1;
+  color: #e65100;
+}
+
+.holiday-dot {
+  background: #e3f2fd;
+  color: #0d47a1;
+}

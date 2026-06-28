@@ -82,6 +82,230 @@ async function login() {
       "Server connection failed";
   }
 }
+async function loadAttendanceSummary(studentId) {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getAttendanceSummary",
+        studentId: studentId
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      document.getElementById("attendancePercent").innerHTML =
+        data.attendance.percentage + "%";
+    } else {
+      document.getElementById("attendancePercent").innerHTML = "--";
+    }
+
+  } catch (err) {
+    document.getElementById("attendancePercent").innerHTML = "--";
+  }
+}
+function openAttendancePopup(studentId) {
+  const months = [
+  { display: "July 2026", value: "Jul-2026" },
+  { display: "August 2026", value: "Aug-2026" },
+  { display: "September 2026", value: "Sep-2026" },
+  { display: "October 2026", value: "Oct-2026" },
+  { display: "November 2026", value: "Nov-2026" },
+  { display: "December 2026", value: "Dec-2026" },
+  { display: "January 2027", value: "Jan-2027" },
+  { display: "February 2027", value: "Feb-2027" },
+  { display: "March 2027", value: "Mar-2027" }
+];
+
+  let monthButtons = months.map(month => `
+  <button class="month-btn" data-month="${month.value}">
+    📅 ${month.display}
+  </button>
+`).join("");
+
+  const popup = document.createElement("div");
+  popup.id = "attendancePopup";
+  popup.className = "attendance-popup-overlay";
+
+  popup.innerHTML = `
+    <div class="attendance-popup">
+      <h2>📅 Attendance</h2>
+      <p>Select Month</p>
+
+      <div class="month-list">
+        ${monthButtons}
+      </div>
+
+      <button id="closeAttendancePopup" class="close-popup-btn">
+        Close
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+
+const escHandler = (e) => {
+  if (e.key === "Escape") {
+    popup.remove();
+    document.removeEventListener("keydown", escHandler);
+  }
+};
+
+document.addEventListener("keydown", escHandler);
+
+popup.addEventListener("click", (e) => {
+  if (e.target === popup) {
+    popup.remove();
+    document.removeEventListener("keydown", escHandler);
+  }
+});
+
+document
+  .getElementById("closeAttendancePopup")
+  .addEventListener("click", () => {
+    popup.remove();
+    document.removeEventListener("keydown", escHandler);
+  });
+
+document.querySelectorAll(".month-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const month = btn.getAttribute("data-month");
+       loadMonthlyAttendance(studentId, month);
+  });
+});
+}
+async function loadMonthlyAttendance(studentId, month) {
+  const popupBox = document.querySelector(".attendance-popup");
+
+  popupBox.innerHTML = `
+    <h2>📅 Attendance</h2>
+    <p>Loading ${month}...</p>
+  `;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getMonthlyAttendance",
+        studentId: studentId,
+        month: month
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showAttendanceCalendar(studentId, data);
+    } else {
+      popupBox.innerHTML = `
+        <h2>📅 Attendance</h2>
+        <p>${data.message}</p>
+        <button class="close-popup-btn" onclick="document.getElementById('attendancePopup').remove()">Close</button>
+      `;
+    }
+
+  } catch (err) {
+    popupBox.innerHTML = `
+      <h2>📅 Attendance</h2>
+      <p>Could not load attendance.</p>
+      <button class="close-popup-btn" onclick="document.getElementById('attendancePopup').remove()">Close</button>
+    `;
+  }
+}
+function showAttendanceCalendar(studentId, data) {
+  const popupBox = document.querySelector(".attendance-popup");
+
+  const monthMap = {
+    "Jul-2026": { name: "July 2026", monthIndex: 6, year: 2026, days: 31 },
+    "Aug-2026": { name: "August 2026", monthIndex: 7, year: 2026, days: 31 },
+    "Sep-2026": { name: "September 2026", monthIndex: 8, year: 2026, days: 30 },
+    "Oct-2026": { name: "October 2026", monthIndex: 9, year: 2026, days: 31 },
+    "Nov-2026": { name: "November 2026", monthIndex: 10, year: 2026, days: 30 },
+    "Dec-2026": { name: "December 2026", monthIndex: 11, year: 2026, days: 31 },
+    "Jan-2027": { name: "January 2027", monthIndex: 0, year: 2027, days: 31 },
+    "Feb-2027": { name: "February 2027", monthIndex: 1, year: 2027, days: 28 },
+    "Mar-2027": { name: "March 2027", monthIndex: 2, year: 2027, days: 31 }
+  };
+
+  const monthInfo = monthMap[data.month];
+
+  const firstDay = new Date(
+    monthInfo.year,
+    monthInfo.monthIndex,
+    1
+  ).getDay();
+
+  let calendarCells = "";
+
+  for (let i = 0; i < firstDay; i++) {
+    calendarCells += `<div class="calendar-cell empty"></div>`;
+  }
+
+  for (let day = 1; day <= monthInfo.days; day++) {
+    const dayData = data.days.find(d => d.day === day);
+    const status = dayData ? dayData.status : "";
+
+    let statusClass = "blank";
+    let statusText = "-";
+
+    if (status === "P") {
+      statusClass = "present";
+      statusText = "P";
+    } else if (status === "A") {
+      statusClass = "absent";
+      statusText = "A";
+    } else if (status === "L") {
+      statusClass = "leave";
+      statusText = "L";
+    } else if (status === "H") {
+      statusClass = "holiday";
+      statusText = "H";
+    }
+
+    calendarCells += `
+      <div class="calendar-cell ${statusClass}">
+        <div class="day-number">${day}</div>
+        <div class="status-text">${statusText}</div>
+      </div>
+    `;
+  }
+
+  popupBox.innerHTML = `
+    <h2>📅 ${monthInfo.name}</h2>
+
+    <div class="calendar-weekdays">
+      <div>Sun</div>
+      <div>Mon</div>
+      <div>Tue</div>
+      <div>Wed</div>
+      <div>Thu</div>
+      <div>Fri</div>
+      <div>Sat</div>
+    </div>
+
+    <div class="attendance-calendar">
+      ${calendarCells}
+    </div>
+
+    <div class="attendance-legend">
+      <span class="legend present-dot">P</span> Present
+      <span class="legend absent-dot">A</span> Absent
+      <span class="legend leave-dot">L</span> Leave
+      <span class="legend holiday-dot">H</span> Holiday
+    </div>
+
+    <button class="month-btn" id="backToMonths">Back to Months</button>
+    <button class="close-popup-btn" onclick="document.getElementById('attendancePopup').remove()">Close</button>
+  `;
+
+  document
+    .getElementById("backToMonths")
+    .addEventListener("click", () => {
+      document.getElementById("attendancePopup").remove();
+      openAttendancePopup(studentId);
+    });
+}
 function showDashboard(data) {
   const s = data.student;
 
@@ -112,9 +336,12 @@ function showDashboard(data) {
           📚<br>Class<br>${s.className}
         </div>
 
-        <div class="summary-box" style="background:#28a745;">
-          ✅<br>Attendance<br>${s.attendance}
-        </div>
+       <div class="summary-box"
+     id="attendanceCard"
+     style="background:#28a745;cursor:pointer;">
+  📅<br>Attendance<br>
+  <span id="attendancePercent">Loading...</span>
+</div>
 
         <div class="summary-box" style="background:${s.feeStatus.toLowerCase() === 'paid' ? '#17a2b8' : '#dc3545'};">
           💰<br>Fee Status<br>${s.feeStatus}
@@ -233,6 +460,15 @@ function showDashboard(data) {
   .addEventListener("click", () => {
     localStorage.removeItem("ttgStudentData");
     location.reload();
+  });
+  console.log("Student object:", s);
+console.log("Student ID sent to attendance:", s.id || s.studentId || s.StudentID);
+
+loadAttendanceSummary(s.id || s.studentId || s.StudentID);
+document
+  .getElementById("attendanceCard")
+  .addEventListener("click", () => {
+    openAttendancePopup(s.id || s.studentId || s.StudentID);
   });
 }
 const savedStudentData = localStorage.getItem("ttgStudentData");
