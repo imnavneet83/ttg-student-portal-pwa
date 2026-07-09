@@ -212,6 +212,8 @@ th{
   padding: 20px;
   text-align: center;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .attendance-popup h2 {
@@ -353,4 +355,60 @@ th{
 .holiday-dot {
   background: #e3f2fd;
   color: #0d47a1;
+}
+.fee-detail-box {
+  text-align: left;
+  background: #f7fbfc;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 14px 0;
+  border: 1px solid #dbeff3;
+}
+
+.fee-detail-box p {
+  margin: 8px 0;
+  font-size: 15px;
+}
+.fee-statement-box{
+    margin-top:20px;
+    text-align:left;
+}
+
+.fee-statement-table{
+    width:100%;
+    border:1px solid #ddd;
+    border-radius:10px;
+    overflow:hidden;
+    font-size:14px;
+}
+
+.fee-row{
+    display:grid;
+    grid-template-columns:65px 1.4fr 55px 55px 60px;
+    align-items:center;
+}
+
+.fee-row>div{
+    padding:7px 5px;
+    border-bottom:1px solid #eee;
+    border-right:1px solid #eee;
+    word-break:break-word;
+}
+
+.fee-row>div:last-child{
+    border-right:none;
+}
+
+.fee-header{
+    background:#006b8f;
+    color:white;
+    font-weight:bold;
+}
+
+.fee-row:nth-child(even){
+    background:#fafafa;
+}
+
+.fee-row:hover{
+    background:#f3f9fb;
 }

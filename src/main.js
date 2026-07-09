@@ -1,8 +1,14 @@
 import "./style.css";
 import { registerSW } from "virtual:pwa-register";
 
-registerSW({
-  immediate: true
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    updateSW(true);
+  },
+  onOfflineReady() {
+    console.log("App ready to work offline");
+  }
 });
 
 const LOGO_URL = "/logo.png";
@@ -82,7 +88,165 @@ async function login() {
       "Server connection failed";
   }
 }
+async function openFeePopup(studentId) {
+  const popup = document.createElement("div");
+  popup.id = "feePopup";
+  popup.className = "attendance-popup-overlay";
+
+  popup.innerHTML = `
+    <div class="attendance-popup">
+      <h2>💰 Fee Details</h2>
+      <p>Loading fee details...</p>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+  document.body.style.overflow = "hidden";
+
+  popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+      popup.remove();
+      document.body.style.overflow = "";
+    }
+  });
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getFeeSummary",
+        studentId: studentId
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success && data.fee) {
+      const f = data.fee;
+
+      document.querySelector("#feePopup .attendance-popup").innerHTML = `
+        <h2>💰 Fee Details</h2>
+
+        <div class="fee-detail-box">
+  <p><b>Status:</b> ${f.status}</p>
+  <p><b>${f.status === "Advance" ? "Advance Balance" : "Payable Amount"}:</b> ₹${f.displayAmount}</p>
+</div>
+
+<div class="fee-statement-box">
+  <h3>Fee Statement</h3>
+
+  <div class="fee-statement-table">
+    <div class="fee-row fee-header">
+      <div>Date</div>
+      <div>Details</div>
+      <div>+</div>
+      <div>-</div>
+      <div>Bal.</div>
+</div>
+
+    ${f.statement.map(row => `
+      <div class="fee-row">
+        <div>${row.date}</div>
+        <div>${row.description}</div>
+        <div>${row.charges ? row.charges : "-"}</div>
+        <div>${row.payments ? row.payments : "-"}</div>
+        <div>${row.balance}</div>
+      </div>
+    `).join("")}
+  </div>
+</div>
+<div style="
+margin-top:10px;
+font-size:12px;
+color:#666;
+text-align:center;">
++ = Charges &nbsp;&nbsp;&nbsp; − = Payments &nbsp;&nbsp;&nbsp; Amounts in ₹
+</div>
+        <button id="closeFeePopup" class="close-popup-btn">Close</button>
+      `;
+
+    } else {
+      document.querySelector("#feePopup .attendance-popup").innerHTML = `
+        <h2>💰 Fee Details</h2>
+        <p>Fee details not available.</p>
+        <button id="closeFeePopup" class="close-popup-btn">Close</button>
+      `;
+    }
+
+    document
+      .getElementById("closeFeePopup")
+      .addEventListener("click", () => {
+        popup.remove();
+        document.body.style.overflow = "";
+      });
+
+  } catch (error) {
+    document.querySelector("#feePopup .attendance-popup").innerHTML = `
+      <h2>💰 Fee Details</h2>
+      <p>Could not load fee details.</p>
+      <button id="closeFeePopup" class="close-popup-btn">Close</button>
+    `;
+
+    document
+      .getElementById("closeFeePopup")
+      .addEventListener("click", () => {
+        popup.remove();
+        document.body.style.overflow = "";
+      });
+  }
+}
+async function loadFeeSummary(studentId) {
+  const feeBox = document.getElementById("feeStatusText");
+
+  if (!feeBox) return;
+
+  if (!studentId) {
+    feeBox.innerHTML = "--";
+    return;
+  }
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getFeeSummary",
+        studentId: studentId
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success && data.fee) {
+      if (data.fee.status === "Paid") {
+        feeBox.innerHTML = "Paid";
+        document.getElementById("feeCard").style.background = "#17a2b8";
+      } else if (data.fee.status === "Advance") {
+        feeBox.innerHTML = "Advance ₹" + data.fee.displayAmount;
+        document.getElementById("feeCard").style.background = "#28a745";
+      } else {
+        feeBox.innerHTML =
+          data.fee.status + " ₹" + data.fee.displayAmount;
+        document.getElementById("feeCard").style.background =
+          data.fee.status === "Overdue" ? "#dc3545" : "#ff9800";
+      }
+    } else {
+      feeBox.innerHTML = "--";
+    }
+
+  } catch (err) {
+    feeBox.innerHTML = "--";
+  }
+}
 async function loadAttendanceSummary(studentId) {
+  const attendanceBox = document.getElementById("attendancePercent");
+
+  if (!attendanceBox) return;
+
+  if (!studentId) {
+    attendanceBox.innerHTML = "--";
+    return;
+  }
+
   try {
     const response = await fetch(API_URL, {
       method: "POST",
@@ -94,36 +258,16 @@ async function loadAttendanceSummary(studentId) {
 
     const data = await response.json();
 
-    if (data.success) {
-      document.getElementById("attendancePercent").innerHTML =
-        data.attendance.percentage + "%";
+    if (data.success && data.attendance) {
+      attendanceBox.innerHTML = data.attendance.percentage + "%";
     } else {
-      document.getElementById("attendancePercent").innerHTML = "--";
+      attendanceBox.innerHTML = "--";
     }
-
   } catch (err) {
-    document.getElementById("attendancePercent").innerHTML = "--";
+    attendanceBox.innerHTML = "--";
   }
 }
-function openAttendancePopup(studentId) {
-  const months = [
-  { display: "July 2026", value: "Jul-2026" },
-  { display: "August 2026", value: "Aug-2026" },
-  { display: "September 2026", value: "Sep-2026" },
-  { display: "October 2026", value: "Oct-2026" },
-  { display: "November 2026", value: "Nov-2026" },
-  { display: "December 2026", value: "Dec-2026" },
-  { display: "January 2027", value: "Jan-2027" },
-  { display: "February 2027", value: "Feb-2027" },
-  { display: "March 2027", value: "Mar-2027" }
-];
-
-  let monthButtons = months.map(month => `
-  <button class="month-btn" data-month="${month.value}">
-    📅 ${month.display}
-  </button>
-`).join("");
-
+async function openAttendancePopup(studentId) {
   const popup = document.createElement("div");
   popup.id = "attendancePopup";
   popup.className = "attendance-popup-overlay";
@@ -131,49 +275,84 @@ function openAttendancePopup(studentId) {
   popup.innerHTML = `
     <div class="attendance-popup">
       <h2>📅 Attendance</h2>
-      <p>Select Month</p>
-
-      <div class="month-list">
-        ${monthButtons}
-      </div>
-
-      <button id="closeAttendancePopup" class="close-popup-btn">
-        Close
-      </button>
+      <p>Loading months...</p>
     </div>
   `;
 
   document.body.appendChild(popup);
+  document.body.style.overflow = "hidden";
 
-const escHandler = (e) => {
-  if (e.key === "Escape") {
-    popup.remove();
-    document.removeEventListener("keydown", escHandler);
-  }
-};
+  const escHandler = (e) => {
+    if (e.key === "Escape") {
+      popup.remove();
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", escHandler);
+    }
+  };
 
-document.addEventListener("keydown", escHandler);
+  document.addEventListener("keydown", escHandler);
 
-popup.addEventListener("click", (e) => {
-  if (e.target === popup) {
-    popup.remove();
-    document.removeEventListener("keydown", escHandler);
-  }
-});
-
-document
-  .getElementById("closeAttendancePopup")
-  .addEventListener("click", () => {
-    popup.remove();
-    document.removeEventListener("keydown", escHandler);
+  popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+      popup.remove();
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", escHandler);
+    }
   });
 
-document.querySelectorAll(".month-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const month = btn.getAttribute("data-month");
-       loadMonthlyAttendance(studentId, month);
+  const allMonths = [
+    { display: "July 2026", value: "Jul-2026", date: new Date(2026, 6, 1) },
+    { display: "August 2026", value: "Aug-2026", date: new Date(2026, 7, 1) },
+    { display: "September 2026", value: "Sep-2026", date: new Date(2026, 8, 1) },
+    { display: "October 2026", value: "Oct-2026", date: new Date(2026, 9, 1) },
+    { display: "November 2026", value: "Nov-2026", date: new Date(2026, 10, 1) },
+    { display: "December 2026", value: "Dec-2026", date: new Date(2026, 11, 1) },
+    { display: "January 2027", value: "Jan-2027", date: new Date(2027, 0, 1) },
+    { display: "February 2027", value: "Feb-2027", date: new Date(2027, 1, 1) },
+    { display: "March 2027", value: "Mar-2027", date: new Date(2027, 2, 1) }
+  ];
+
+  const today = new Date();
+
+  let months = allMonths.filter(month => month.date <= today);
+
+  if (months.length === 0) {
+    months = [allMonths[0]];
+  }
+
+  let monthButtons = months.map(month => `
+    <button class="month-btn" data-month="${month.value}">
+      📅 ${month.display}
+    </button>
+  `).join("");
+
+  document.querySelector(".attendance-popup").innerHTML = `
+    <h2>📅 Attendance</h2>
+    <p>Select Month</p>
+
+    <div class="month-list">
+      ${monthButtons}
+    </div>
+
+    <button id="closeAttendancePopup" class="close-popup-btn">
+      Close
+    </button>
+  `;
+
+  document
+    .getElementById("closeAttendancePopup")
+    .addEventListener("click", () => {
+      popup.remove();
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", escHandler);
+    });
+
+  document.querySelectorAll(".month-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const month = btn.getAttribute("data-month");
+      loadMonthlyAttendance(studentId, month);
+    });
   });
-});
 }
 async function loadMonthlyAttendance(studentId, month) {
   const popupBox = document.querySelector(".attendance-popup");
@@ -308,6 +487,8 @@ function showAttendanceCalendar(studentId, data) {
 }
 function showDashboard(data) {
   const s = data.student;
+  const studentIdForAttendance =
+  s.id || s.studentId || s.StudentID || s.StudentId;
 
   let html = `
     <div class="container">
@@ -343,9 +524,12 @@ function showDashboard(data) {
   <span id="attendancePercent">Loading...</span>
 </div>
 
-        <div class="summary-box" style="background:${s.feeStatus.toLowerCase() === 'paid' ? '#17a2b8' : '#dc3545'};">
-          💰<br>Fee Status<br>${s.feeStatus}
-        </div>
+        <div class="summary-box"
+     id="feeCard"
+     style="background:#17a2b8;cursor:pointer;">
+  💰<br>Fee Status<br>
+  <span id="feeStatusText">Loading...</span>
+</div>
 
         <div class="summary-box" style="background:#ff9800;">
           🏆<br>Monthly Rank<br>${data.scores.monthlyRank}
@@ -464,11 +648,17 @@ function showDashboard(data) {
   console.log("Student object:", s);
 console.log("Student ID sent to attendance:", s.id || s.studentId || s.StudentID);
 
-loadAttendanceSummary(s.id || s.studentId || s.StudentID);
+loadAttendanceSummary(studentIdForAttendance);
+loadFeeSummary(studentIdForAttendance);
+document
+  .getElementById("feeCard")
+  .addEventListener("click", () => {
+    openFeePopup(studentIdForAttendance);
+  });
 document
   .getElementById("attendanceCard")
   .addEventListener("click", () => {
-    openAttendancePopup(s.id || s.studentId || s.StudentID);
+  openAttendancePopup(studentIdForAttendance);
   });
 }
 const savedStudentData = localStorage.getItem("ttgStudentData");
