@@ -552,8 +552,8 @@ function showDashboard(data) {
           <p><b>Total Marks This Month:</b>
           ${data.scores.monthlyTotal} / ${data.scores.monthlyMax}</p>
 
-          <p><b>Monthly Overall Rank:</b>
-          ${data.scores.monthlyRank}</p>
+          <p><b>Overall Rank:</b>
+${data.scores.overallRank ?? "-"}</p>
 
           <p style="font-weight:bold;color:#006b8f;margin-top:12px;border-top:1px solid #ddd;padding-top:10px;">
             ${
@@ -565,13 +565,34 @@ function showDashboard(data) {
         </div>
 
         <div class="card">
-          <h3>🏆 Monthly Top 3</h3>
-          ${
-            data.scores.leaderboard.map(item => `
-              <p><b>${item.rank}.</b> ${item.name} - ${item.total} marks</p>
-            `).join("")
-          }
-        </div>
+  <h3>🏆 Monthly Top 3</h3>
+
+  <table style="text-align:center;">
+    <tr>
+      <th>Rank</th>
+      <th>Name</th>
+      <th>Marks</th>
+    </tr>
+
+    ${
+      data.scores.leaderboard.length > 0
+        ? data.scores.leaderboard.map(item => `
+            <tr>
+              <td>${item.rank}</td>
+              <td>${item.name}</td>
+              <td>${item.total}</td>
+            </tr>
+          `).join("")
+        : `
+          <tr>
+            <td colspan="3" style="text-align:center;">
+              No ranking data available
+            </td>
+          </tr>
+        `
+    }
+  </table>
+</div>
       </div>
 
       <div class="card">
@@ -661,8 +682,42 @@ document
   openAttendancePopup(studentIdForAttendance);
   });
 }
+async function refreshDashboard(studentId) {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "getDashboardData",
+        studentId: studentId
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      localStorage.setItem("ttgStudentData", JSON.stringify(data));
+      showDashboard(data);
+    } else {
+      localStorage.removeItem("ttgStudentData");
+      location.reload();
+    }
+
+  } catch (error) {
+    const cached = localStorage.getItem("ttgStudentData");
+
+    if (cached) {
+      showDashboard(JSON.parse(cached));
+    }
+  }
+}
 const savedStudentData = localStorage.getItem("ttgStudentData");
 
 if (savedStudentData) {
-  showDashboard(JSON.parse(savedStudentData));
+  const savedData = JSON.parse(savedStudentData);
+
+  if (savedData.student && savedData.student.id) {
+    refreshDashboard(savedData.student.id);
+  } else {
+    localStorage.removeItem("ttgStudentData");
+  }
 }
