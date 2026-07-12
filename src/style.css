@@ -17,16 +17,19 @@ body{
 
 .header{
   text-align:center;
-  margin-top:30px;
+  margin-top:2px;
 }
 
 .logo{
   width:100px;
+  display:block;
+  margin:0 auto;
 }
 
-.header h1{
+.institute-name{
   color:#006b8f;
-  margin-top:10px;
+  margin-top:6px;
+  margin-bottom:0;
 }
 
 .header p{
@@ -71,13 +74,13 @@ button:hover{
 }
 .banner{
   width:100%;
-  margin-top:20px;
+  margin-top:12px;
   border-radius:15px;
 }
 .container{
   max-width:900px;
   margin:auto;
-  padding:20px;
+  padding:8px 20px 20px;
 }
 
 .card{
@@ -102,6 +105,18 @@ button:hover{
 .profile-details{
   flex:1;
   text-align:left;
+}
+
+.profile-details h2{
+  color:#006b8f;
+  font-size:26px;
+  margin-bottom:18px;
+}
+
+.profile-details p{
+  margin:12px 0;
+  font-size:16px;
+  line-height:1.5;
 }
 
 .profile-photo-wrap{
@@ -411,4 +426,109 @@ th{
 
 .fee-row:hover{
     background:#f3f9fb;
+}
+.notes-card{
+  overflow:hidden;
+}
+
+.notes-subject-label{
+  display:block;
+  margin-top:14px;
+  margin-bottom:7px;
+  font-size:14px;
+  font-weight:bold;
+  color:#005f7f;
+}
+
+#notesSubjectSelect{
+  width:100%;
+  padding:12px;
+  border:1px solid #b8dce8;
+  border-radius:9px;
+  background:#ffffff;
+  color:#333;
+  font-size:15px;
+  cursor:pointer;
+}
+
+#notesSubjectSelect:focus{
+  outline:none;
+  border-color:#008cba;
+  box-shadow:0 0 0 2px rgba(0,140,186,0.12);
+}
+
+#notesList{
+  margin-top:14px;
+}
+
+.notes-message{
+  padding:14px;
+  border-radius:9px;
+  background:#f3f9fb;
+  color:#666;
+  text-align:center;
+  font-size:14px;
+}
+
+.notes-list{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+
+.note-download-item{
+  display:grid;
+  grid-template-columns:32px 1fr 28px;
+  align-items:center;
+  gap:8px;
+  padding:12px;
+  border:1px solid #d8ebf1;
+  border-radius:10px;
+  background:#ffffff;
+  color:#005f7f;
+  text-decoration:none;
+  transition:all 0.2s ease;
+}
+
+.note-download-item:hover{
+  background:#eef9fc;
+  border-color:#008cba;
+  transform:translateY(-1px);
+}
+
+.note-icon{
+  font-size:21px;
+  text-align:center;
+}
+
+.note-title{
+  font-size:14px;
+  font-weight:bold;
+  line-height:1.35;
+  word-break:break-word;
+}
+
+.note-download-icon{
+  color:#008cba;
+  font-size:18px;
+  font-weight:bold;
+  text-align:center;
+}
+.startup-loading{
+  min-height:80vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.startup-loading h2{
+  margin-top:18px;
+  color:#006b8f;
+}
+
+.startup-loading p{
+  margin-top:8px;
+  color:#666;
 }

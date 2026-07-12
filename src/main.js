@@ -17,29 +17,55 @@ const API_URL = "https://script.google.com/macros/s/AKfycbx73z-O6LOeh4Lph5aADRZX
 
 document.querySelector("#app").innerHTML = `
   <div class="container">
-
-    <div class="header">
+    <div class="startup-loading">
       <img src="${LOGO_URL}" class="logo" />
 
-      <h1>The Toppers Gurukul</h1>
-      <p>Student Portal</p>
+      <h2>Loading Student Portal...</h2>
+
+      <p>Please wait</p>
     </div>
-
-    <img src="${BANNER_URL}" class="banner" />
-
-    <div class="login-card">
-      <input type="text" id="studentId" placeholder="Student ID" />
-      <input type="password" id="password" placeholder="Password" />
-
-      <button id="loginBtn">Login</button>
-
-      <div id="message"></div>
-    </div>
-
   </div>
 `;
-document.getElementById("loginBtn").addEventListener("click", login);
+function showLoginScreen() {
+  document.querySelector("#app").innerHTML = `
+    <div class="container">
 
+      <div class="header">
+        <img src="${LOGO_URL}" class="logo" />
+
+        <h1>The Toppers Gurukul</h1>
+        <p>Student Portal</p>
+      </div>
+
+      <img src="${BANNER_URL}" class="banner" />
+
+      <div class="login-card">
+        <input
+          type="text"
+          id="studentId"
+          placeholder="Student ID"
+        />
+
+        <input
+          type="password"
+          id="password"
+          placeholder="Password"
+        />
+
+        <button id="loginBtn">
+          Login
+        </button>
+
+        <div id="message"></div>
+      </div>
+
+    </div>
+  `;
+
+  document
+    .getElementById("loginBtn")
+    .addEventListener("click", login);
+}
 async function login() {
 
   const studentId =
@@ -494,7 +520,7 @@ function showDashboard(data) {
     <div class="container">
       <div class="header">
         <img src="${LOGO_URL}" class="logo" />
-        <h1>The Toppers Gurukul</h1>
+        <h1 class="institute-name">The Toppers Gurukul</h1>
         <h2>Welcome, ${s.name}</h2>
         <div class="subtitle">Student Academic Dashboard</div>
       </div>
@@ -620,12 +646,98 @@ ${data.scores.overallRank ?? "-"}</p>
   });
 
   html += `</table></div>`;
+  const upcomingTests =
+    Array.isArray(data.upcomingTests)
+      ? data.upcomingTests
+      : [];
 
-  html += `<div class="card"><h3>📚 Notes</h3>`;
-  data.notes.forEach(n => {
-    html += `<p>${n.subject}: <a href="${n.link}" target="_blank">${n.title}</a></p>`;
-  });
-  html += `</div>`;
+  html += `
+    <div class="card">
+      <h3>📝 Upcoming Tests</h3>
+
+      <table>
+        <tr>
+          <th>Date</th>
+          <th>Subject</th>
+          <th>Total Marks</th>
+          <th>Chapter</th>
+        </tr>
+
+        ${
+          upcomingTests.length > 0
+            ? upcomingTests.map(test => `
+                <tr>
+                  <td>${test.date}</td>
+                  <td>${test.subject}</td>
+                  <td>${test.totalMarks}</td>
+                  <td>${test.chapter || "-"}</td>
+                </tr>
+              `).join("")
+            : `
+                <tr>
+                  <td colspan="4">
+                    No upcoming tests scheduled
+                  </td>
+                </tr>
+              `
+        }
+      </table>
+    </div>
+  `;
+    const availableNotes = Array.isArray(data.notes)
+    ? data.notes
+    : [];
+
+  const noteSubjects = [
+    ...new Set(
+      availableNotes
+        .map(note =>
+          String(note.subject || "").trim()
+        )
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a.localeCompare(b));
+
+  html += `
+    <div class="card notes-card">
+      <h3>📚 Notes</h3>
+
+      ${
+        noteSubjects.length > 0
+          ? `
+            <label
+              for="notesSubjectSelect"
+              class="notes-subject-label"
+            >
+              Select Subject
+            </label>
+
+            <select id="notesSubjectSelect">
+              <option value="">
+                Choose a subject
+              </option>
+
+              ${noteSubjects.map(subject => `
+                <option value="${subject}">
+                  ${subject}
+                </option>
+              `).join("")}
+            </select>
+
+            <div id="notesList">
+              <p class="notes-message">
+                Select a subject to view notes.
+              </p>
+            </div>
+          `
+          : `
+            <p class="notes-message">
+              No notes are currently available.
+            </p>
+          `
+      }
+    </div>
+  `;
 
   html += `<div class="card"><h3>📢 Notices</h3>`;
   data.notices.forEach(n => {
@@ -656,6 +768,71 @@ ${data.scores.overallRank ?? "-"}</p>
   `;
 
   document.querySelector("#app").innerHTML = html;
+    const notesSubjectSelect =
+    document.getElementById("notesSubjectSelect");
+
+  const notesList =
+    document.getElementById("notesList");
+
+  if (notesSubjectSelect && notesList) {
+    notesSubjectSelect.addEventListener(
+      "change",
+      () => {
+        const selectedSubject =
+          notesSubjectSelect.value;
+
+        if (!selectedSubject) {
+          notesList.innerHTML = `
+            <p class="notes-message">
+              Select a subject to view notes.
+            </p>
+          `;
+          return;
+        }
+
+        const subjectNotes =
+          availableNotes.filter(note =>
+            String(note.subject || "").trim() ===
+            selectedSubject
+          );
+
+        if (subjectNotes.length === 0) {
+          notesList.innerHTML = `
+            <p class="notes-message">
+              No notes are available for this subject.
+            </p>
+          `;
+          return;
+        }
+
+        notesList.innerHTML = `
+          <div class="notes-list">
+            ${subjectNotes.map(note => `
+              <a
+                href="${note.link}"
+                class="note-download-item"
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
+                <span class="note-icon">
+                  📄
+                </span>
+
+                <span class="note-title">
+                  ${note.title}
+                </span>
+
+                <span class="note-download-icon">
+                  ⬇
+                </span>
+              </a>
+            `).join("")}
+          </div>
+        `;
+      }
+    );
+  }
 
   document
     .getElementById("changePasswordBtn")
@@ -695,29 +872,70 @@ async function refreshDashboard(studentId) {
     const data = await response.json();
 
     if (data.success) {
-      localStorage.setItem("ttgStudentData", JSON.stringify(data));
-      showDashboard(data);
-    } else {
-      localStorage.removeItem("ttgStudentData");
-      location.reload();
-    }
+  localStorage.setItem(
+    "ttgStudentData",
+    JSON.stringify(data)
+  );
+
+  showDashboard(data);
+} else {
+  localStorage.removeItem(
+    "ttgStudentData"
+  );
+
+  showLoginScreen();
+}
 
   } catch (error) {
-    const cached = localStorage.getItem("ttgStudentData");
+  const cached =
+    localStorage.getItem("ttgStudentData");
 
-    if (cached) {
-      showDashboard(JSON.parse(cached));
+  if (cached) {
+    try {
+      showDashboard(
+        JSON.parse(cached)
+      );
+    } catch (cacheError) {
+      localStorage.removeItem(
+        "ttgStudentData"
+      );
+
+      showLoginScreen();
     }
+  } else {
+    showLoginScreen();
   }
 }
-const savedStudentData = localStorage.getItem("ttgStudentData");
+}
+const savedStudentData =
+  localStorage.getItem("ttgStudentData");
 
 if (savedStudentData) {
-  const savedData = JSON.parse(savedStudentData);
+  try {
+    const savedData =
+      JSON.parse(savedStudentData);
 
-  if (savedData.student && savedData.student.id) {
-    refreshDashboard(savedData.student.id);
-  } else {
-    localStorage.removeItem("ttgStudentData");
+    if (
+      savedData.student &&
+      savedData.student.id
+    ) {
+      refreshDashboard(
+        savedData.student.id
+      );
+    } else {
+      localStorage.removeItem(
+        "ttgStudentData"
+      );
+
+      showLoginScreen();
+    }
+  } catch (error) {
+    localStorage.removeItem(
+      "ttgStudentData"
+    );
+
+    showLoginScreen();
   }
+} else {
+  showLoginScreen();
 }
