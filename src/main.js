@@ -558,7 +558,7 @@ const previousScholarshipMonth =
       </div>
 
       <div class="summary">
-        <div class="summary-box" style="background:#006b8f;">
+        <div class="summary-box" style="background:#008CBA;">
           📚<br>Class<br>${s.className}
         </div>
 
@@ -576,7 +576,7 @@ const previousScholarshipMonth =
   <span id="feeStatusText">Loading...</span>
 </div>
 
-        <div class="summary-box" style="background:#ff9800;">
+        <div class="summary-box" style="background:#008CBA;">
           🏆<br>Monthly Rank<br>${data.scores.monthlyRank}
         </div>
       </div>
