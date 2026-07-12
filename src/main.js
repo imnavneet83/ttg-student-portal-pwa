@@ -511,6 +511,92 @@ function showAttendanceCalendar(studentId, data) {
       openAttendancePopup(studentId);
     });
 }
+async function changeMyPassword(studentId) {
+  const currentPasswordInput =
+    document.getElementById("currentPassword");
+
+  const newPasswordInput =
+    document.getElementById("newPassword");
+
+  const message =
+    document.getElementById("passwordMessage");
+
+  const button =
+    document.getElementById("changePasswordBtn");
+
+  const currentPassword =
+    currentPasswordInput.value.trim();
+
+  const newPassword =
+    newPasswordInput.value.trim();
+
+  if (!currentPassword) {
+    message.style.color = "red";
+    message.innerHTML =
+      "Please enter your current password.";
+    return;
+  }
+
+  if (!newPassword) {
+    message.style.color = "red";
+    message.innerHTML =
+      "Please enter a new password.";
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    message.style.color = "red";
+    message.innerHTML =
+      "New password must contain at least 6 characters.";
+    return;
+  }
+
+  if (currentPassword === newPassword) {
+    message.style.color = "red";
+    message.innerHTML =
+      "New password must be different from the current password.";
+    return;
+  }
+
+  button.disabled = true;
+  button.innerHTML = "Changing...";
+
+  message.style.color = "#666";
+  message.innerHTML = "Please wait...";
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "changePassword",
+        studentId,
+        currentPassword,
+        newPassword
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      message.style.color = "green";
+      message.innerHTML = data.message;
+
+      currentPasswordInput.value = "";
+      newPasswordInput.value = "";
+    } else {
+      message.style.color = "red";
+      message.innerHTML = data.message;
+    }
+
+  } catch (error) {
+    message.style.color = "red";
+    message.innerHTML =
+      "Could not change password. Please try again.";
+  } finally {
+    button.disabled = false;
+    button.innerHTML = "Change Password";
+  }
+}
 function showDashboard(data) {
   const today = new Date();
 
