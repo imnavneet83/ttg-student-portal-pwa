@@ -512,6 +512,25 @@ function showAttendanceCalendar(studentId, data) {
     });
 }
 function showDashboard(data) {
+  const today = new Date();
+
+const currentScholarshipMonth =
+  today.toLocaleString("en-IN", {
+    month: "long",
+    year: "numeric"
+  });
+
+const previousMonthDate = new Date(
+  today.getFullYear(),
+  today.getMonth() - 1,
+  1
+);
+
+const previousScholarshipMonth =
+  previousMonthDate.toLocaleString("en-IN", {
+    month: "long",
+    year: "numeric"
+  });
   const s = data.student;
   const studentIdForAttendance =
   s.id || s.studentId || s.StudentID || s.StudentId;
@@ -581,13 +600,47 @@ function showDashboard(data) {
           <p><b>Overall Rank:</b>
 ${data.scores.overallRank ?? "-"}</p>
 
-          <p style="font-weight:bold;color:#006b8f;margin-top:12px;border-top:1px solid #ddd;padding-top:10px;">
-            ${
-              data.scores.monthlyRank == 1
-                ? '🏆 Scholarship Status: Congrats! You have got the 50% scholarship.'
-                : '🏆 Scholarship Status: Need ' + (data.scores.marksNeededForRank1 || 0) + ' more marks to reach Rank 1.'
-            }
-          </p>
+          <div
+  style="
+    margin-top:14px;
+    border-top:1px solid #ddd;
+    padding-top:12px;
+  "
+>
+  <table style="margin-top:0;">
+    <tr>
+      <th colspan="2">
+        🏆 Scholarship Status
+      </th>
+    </tr>
+
+    <tr>
+      <td style="font-weight:bold;">
+        ${previousScholarshipMonth}
+      </td>
+
+      <td>
+        Final status will appear after monthly closure
+      </td>
+    </tr>
+
+    <tr>
+      <td style="font-weight:bold;">
+        ${currentScholarshipMonth}
+      </td>
+
+      <td>
+        ${
+          data.scores.monthlyRank == 1
+            ? "Provisional Rank 1 — eligibility will be confirmed after attendance and fee verification"
+            : "Need " +
+              (data.scores.marksNeededForRank1 || 0) +
+              " more marks to reach Rank 1"
+        }
+      </td>
+    </tr>
+  </table>
+</div>
         </div>
 
         <div class="card">
