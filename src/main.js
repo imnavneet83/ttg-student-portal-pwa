@@ -590,89 +590,78 @@ const previousScholarshipMonth =
         </div>
       ` : ''}
 
-      <div class="performance-row">
-        <div class="card">
-          <h3>🏆 Monthly Performance</h3>
-
-          <p><b>Total Marks This Month:</b>
-          ${data.scores.monthlyTotal} / ${data.scores.monthlyMax}</p>
-
-          <p><b>Overall Rank:</b>
-${data.scores.overallRank ?? "-"}</p>
-
-          <div
-  style="
-    margin-top:14px;
-    border-top:1px solid #ddd;
-    padding-top:12px;
-  "
->
+      <div class="card">
   <table style="margin-top:0;">
     <tr>
       <th colspan="2">
-        🏆 Scholarship Status
+        📊 Academic Performance
       </th>
     </tr>
 
     <tr>
-      <td style="font-weight:bold;">
-        ${previousScholarshipMonth}
+      <td style="font-weight:bold;text-align:left;">
+        Total Marks This Month
       </td>
 
       <td>
-        Final status will appear after monthly closure
+        ${data.scores.monthlyTotal} /
+        ${data.scores.monthlyMax}
       </td>
     </tr>
 
     <tr>
-      <td style="font-weight:bold;">
-        ${currentScholarshipMonth}
+      <td style="font-weight:bold;text-align:left;">
+        Overall Rank
       </td>
 
       <td>
-        ${
-          data.scores.monthlyRank == 1
-            ? "Provisional Rank 1 — eligibility will be confirmed after attendance and fee verification"
-            : "Need " +
-              (data.scores.marksNeededForRank1 || 0) +
-              " more marks to reach Rank 1"
-        }
+        ${data.scores.overallRank ?? "-"}
       </td>
     </tr>
   </table>
+
+  <div
+    style="
+      margin-top:14px;
+      border-top:1px solid #ddd;
+      padding-top:12px;
+    "
+  >
+    <table style="margin-top:0;">
+      <tr>
+        <th colspan="2">
+          🏆 Scholarship Status
+        </th>
+      </tr>
+
+      <tr>
+        <td style="font-weight:bold;">
+          ${previousScholarshipMonth}
+        </td>
+
+        <td>
+          Final status will appear after monthly closure
+        </td>
+      </tr>
+
+      <tr>
+        <td style="font-weight:bold;">
+          ${currentScholarshipMonth}
+        </td>
+
+        <td>
+          ${
+            data.scores.monthlyRank == 1
+              ? "Provisional Rank 1 — eligibility will be confirmed after attendance and fee verification"
+              : "Need " +
+                (data.scores.marksNeededForRank1 || 0) +
+                " more marks to reach Rank 1"
+          }
+        </td>
+      </tr>
+    </table>
+  </div>
 </div>
-        </div>
-
-        <div class="card">
-  <h3>🏆 Monthly Top 3</h3>
-
-  <table style="text-align:center;">
-    <tr>
-      <th>Rank</th>
-      <th>Name</th>
-      <th>Marks</th>
-    </tr>
-
-    ${
-      data.scores.leaderboard.length > 0
-        ? data.scores.leaderboard.map(item => `
-            <tr>
-              <td>${item.rank}</td>
-              <td>${item.name}</td>
-              <td>${item.total}</td>
-            </tr>
-          `).join("")
-        : `
-          <tr>
-            <td colspan="3" style="text-align:center;">
-              No ranking data available
-            </td>
-          </tr>
-        `
-    }
-  </table>
-</div>
-      </div>
 
       <div class="card">
         <h3>📊 Score Card</h3>
@@ -699,6 +688,37 @@ ${data.scores.overallRank ?? "-"}</p>
   });
 
   html += `</table></div>`;
+  html += `
+  <div class="card">
+    <h3>🏆 Monthly Top 3</h3>
+
+    <table style="text-align:center;">
+      <tr>
+        <th>Rank</th>
+        <th>Name</th>
+        <th>Marks</th>
+      </tr>
+
+      ${
+        data.scores.leaderboard.length > 0
+          ? data.scores.leaderboard.map(item => `
+              <tr>
+                <td>${item.rank}</td>
+                <td>${item.name}</td>
+                <td>${item.total}</td>
+              </tr>
+            `).join("")
+          : `
+            <tr>
+              <td colspan="3">
+                No ranking data available
+              </td>
+            </tr>
+          `
+      }
+    </table>
+  </div>
+`;
   const upcomingTests =
     Array.isArray(data.upcomingTests)
       ? data.upcomingTests
